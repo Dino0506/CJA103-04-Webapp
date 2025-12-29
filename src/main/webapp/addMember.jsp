@@ -3,103 +3,89 @@
 <%@ page import="com.model.*"%>
 
 <%
-  // 當 Servlet 發現錯誤導回此頁時，會取出原本輸入的 VO 物件
   MemberVO memberVO = (MemberVO) request.getAttribute("memberVO");
 %>
 
 <html>
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-<title>技師資料新增 - addMember.jsp</title>
-
+<title>技師入駐 -Carshop</title>
 <style>
-  table#table-1 {
-    background-color: #CCCCFF;
-    border: 2px solid black;
-    text-align: center;
-    width: 500px;
-  }
-  table#table-1 h4 {
-    color: red;
-    display: block;
-    margin-bottom: 1px;
-  }
-  h4 {
-    color: blue;
-    display: inline;
-  }
-  table {
-    width: 500px;
-    background-color: white;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  table, th, td {
-    border: 1px solid #CCCCFF;
-  }
-  th, td {
-    padding: 5px;
-  }
+    body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; padding: 40px; }
+    .form-container { 
+        max-width: 550px; margin: auto; background: white; padding: 35px; 
+        border-radius: 12px; border-top: 8px solid #27ae60; /* 綠色頂條 */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .header-box { text-align: center; margin-bottom: 30px; }
+    .header-box h2 { color: #2c3e50; margin-bottom: 5px; }
+    .header-box p { color: #7f8c8d; font-size: 14px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #34495e; font-weight: bold; }
+    input[type="text"], select { 
+        width: 100%; padding: 12px; border: 1px solid #ddd; 
+        border-radius: 6px; box-sizing: border-box; transition: 0.3s;
+    }
+    input[type="text"]:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 5px rgba(39,174,96,0.2); }
+    .submit-btn { 
+        width: 100%; padding: 15px; background: #27ae60; color: white; 
+        border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold;
+    }
+    .submit-btn:hover { background: #219150; }
+    .back-link { display: block; text-align: center; margin-top: 20px; color: #3498db; text-decoration: none; }
+    .error-msg { color: #e74c3c; background: #fdf2f2; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 14px; }
 </style>
 </head>
-<body bgcolor='white'>
+<body>
 
-<table id="table-1">
-    <tr><td>
-         <h3>技師資料新增 - addMember.jsp</h3>
-         <h4><a href="select_page.jsp">回首頁</a></h4>
-    </td></tr>
-</table>
+<div class="form-container">
+    <div class="header-box">
+        <h2>🚚 技師入駐申請</h2>
+        <p>請填寫基本資訊以建立新的技師檔案</p>
+    </div>
 
-<h3>資料新增:</h3>
+    <c:if test="${not empty errorMsgs}">
+        <div class="error-msg">
+            <c:forEach var="message" items="${errorMsgs}"><div>• ${message}</div></c:forEach>
+        </div>
+    </c:if>
 
-<%-- 錯誤表列 --%>
-<c:if test="${not empty errorMsgs}">
-    <font style="color:red">請修正以下錯誤:</font>
-    <ul>
-        <c:forEach var="message" items="${errorMsgs}">
-            <li style="color:red">${message}</li>
-        </c:forEach>
-    </ul>
-</c:if>
+    <form method="post" action="<%=request.getContextPath()%>/member.do">
+        <input type="hidden" name="memberNo" value="1">
 
-<FORM METHOD="post" ACTION="<%=request.getContextPath()%>/member.do" name="form1">
-<table>
-    <tr>
-        <td>技師帳號:</td>
-        <td><input type="TEXT" name="account" size="45" 
-            value="<%= (memberVO==null)? "" : memberVO.getAccount()%>" /></td>
-    </tr>
-    <tr>
-        <td>技師姓名:</td>
-        <td><input type="TEXT" name="name" size="45" 
-            value="<%= (memberVO==null)? "" : memberVO.getName()%>" /></td>
-    </tr>
-    <tr>
-        <td>服務地址:</td>
-        <td><input type="TEXT" name="address" size="45" 
-            value="<%= (memberVO==null)? "" : memberVO.getAddress()%>" /></td>
-    </tr>
-    <tr>
-        <td>技師電話:</td>
-        <td><input type="TEXT" name="phone" size="45" 
-            value="<%= (memberVO==null)? "" : memberVO.getPhone()%>" /></td>
-    </tr>
-    <tr>
-        <td>技師狀態:</td>
-        <td>
-            <select size="1" name="status">
-                <option value="0" <%= (memberVO!=null && memberVO.getStatus()==0)? "selected":"" %>>正常</option>
-                <option value="1" <%= (memberVO!=null && memberVO.getStatus()==1)? "selected":"" %>>停權</option>
+        <div class="form-group">
+            <label>技師真實姓名</label>
+            <input type="text" name="realName" placeholder="例如：王小明" value="<%= (memberVO==null)? "" : memberVO.getRealName()%>">
+        </div>
+
+        <div class="form-group">
+            <label>連絡電話</label>
+            <input type="text" name="phone" placeholder="09xxxxxxxx" value="<%= (memberVO==null)? "" : memberVO.getPhone()%>">
+        </div>
+
+        <div class="form-group">
+            <label>電子郵件 (Email)</label>
+            <input type="text" name="email" placeholder="example@mail.com" value="<%= (memberVO==null)? "" : memberVO.getEmail()%>">
+        </div>
+
+        <div class="form-group">
+            <label>服務地區</label>
+            <input type="text" name="serviceArea" placeholder="例如：台北市、新北市" value="<%= (memberVO==null)? "" : memberVO.getServiceArea()%>">
+        </div>
+
+        <div class="form-group">
+            <label>帳號啟動狀態</label>
+            <select name="isActive">
+                <option value="1">立即啟用</option>
+                <option value="0">暫時停用</option>
             </select>
-        </td>
-    </tr>
-</table>
+        </div>
 
-<br>
-<input type="hidden" name="action" value="insert">
-<input type="submit" value="送出新增">
-</FORM>
+        <input type="hidden" name="action" value="insert">
+        <button type="submit" class="submit-btn">確認新增技師</button>
+    </form>
+    
+    <a href="select_page.jsp" class="back-link">← 取消並返回查詢頁</a>
+</div>
 
 </body>
 </html>

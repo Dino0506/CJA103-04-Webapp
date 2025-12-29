@@ -1,199 +1,147 @@
-package com.model; // 根據結構圖修改封裝路徑
+package com.model;
 
 import java.util.*;
 import java.sql.*;
 
 public class MemberJDBCDAO implements MemberDAO_interface {
-	String driver = "com.mysql.cj.jdbc.Driver";
-	String url = "jdbc:mysql://localhost:3306/db01?serverTimezone=Asia/Taipei";
-	String userid = "root";
-	String passwd = "dinohung88"; // 請替換成您的資料庫密碼
+    // 1. 資料庫連線設定
+    String driver = "com.mysql.cj.jdbc.Driver";
+    String url = "jdbc:mysql://localhost:3306/cja103g1?serverTimezone=Asia/Taipei";
+    String userid = "root";
+    String passwd = "dinohung88"; 
 
-	// SQL 指令完全對應 MEMBER 資料表結構
-	private static final String INSERT_STMT = 
-		"INSERT INTO MEMBER (ACCOUNT, NAME, ADDRESS, PHONE, STATUS) VALUES (?, ?, ?, ?, ?)";
-	private static final String GET_ALL_STMT = 
-		"SELECT TECH_ID, ACCOUNT, NAME, ADDRESS, PHONE, STATUS, CREATED_AT FROM MEMBER order by TECH_ID";
-	private static final String GET_ONE_STMT = 
-		"SELECT TECH_ID, ACCOUNT, NAME, ADDRESS, PHONE, STATUS, CREATED_AT FROM MEMBER where TECH_ID = ?";
-	private static final String DELETE = 
-		"DELETE FROM MEMBER where TECH_ID = ?";
-	private static final String UPDATE = 
-		"UPDATE MEMBER set ACCOUNT=?, NAME=?, ADDRESS=?, PHONE=?, STATUS=? where TECH_ID = ?";
+    // 2. SQL 指令定義
+    private static final String INSERT_STMT = 
+        "INSERT INTO technician (member_no, real_name, phone, email, service_area, is_active) VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String GET_ALL_STMT = 
+        "SELECT * FROM technician ORDER BY tech_no";
+    private static final String GET_ONE_STMT = 
+        "SELECT * FROM technician WHERE tech_no = ?";
+    private static final String DELETE = 
+        "DELETE FROM technician WHERE tech_no = ?";
+    private static final String UPDATE = 
+        "UPDATE technician SET real_name=?, phone=?, email=?, service_area=?, is_active=? WHERE tech_no = ?";
 
-	static {
-		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException("Couldn't load database driver. " + e.getMessage());
-		}
-	}
+    // 3. 載入資料庫驅動程式
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("無法載入資料庫驅動程式: " + e.getMessage());
+        }
+    }
 
-	@Override
-	public void insert(MemberVO memberVO) {
-		Connection con = null;
-		PreparedStatement pstmt = null;
+    // 新增技師資料
+    @Override
+    public void insert(MemberVO memberVO) {
+        // 使用 try-with-resources 自動關閉連線
+        try (Connection con = DriverManager.getConnection(url, userid, passwd);
+             PreparedStatement pstmt = con.prepareStatement(INSERT_STMT)) {
 
-		try {
-			con = DriverManager.getConnection(url, userid, passwd);
-			pstmt = con.prepareStatement(INSERT_STMT);
+            pstmt.setInt(1, memberVO.getMemberNo());
+            pstmt.setString(2, memberVO.getRealName());
+            pstmt.setString(3, memberVO.getPhone());
+            pstmt.setString(4, memberVO.getEmail());
+            pstmt.setString(5, memberVO.getServiceArea());
+            pstmt.setInt(6, memberVO.getIsActive());
 
-			pstmt.setString(1, memberVO.getAccount());
-			pstmt.setString(2, memberVO.getName());
-			pstmt.setString(3, memberVO.getAddress());
-			pstmt.setString(4, memberVO.getPhone());
-			pstmt.setInt(5, memberVO.getStatus());
+            pstmt.executeUpdate();
 
-			pstmt.executeUpdate();
+        } catch (SQLException se) {
+            throw new RuntimeException("資料庫新增報錯: " + se.getMessage());
+        }
+    }
 
-		} catch (SQLException se) {
-			throw new RuntimeException("A database error occured. " + se.getMessage());
-		} finally {
-			if (pstmt != null) {
-				try { pstmt.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (con != null) {
-				try { con.close(); } catch (Exception e) { e.printStackTrace(System.err); }
-			}
-		}
-	}
+    // 修改技師資料
+    @Override
+    public void update(MemberVO memberVO) {
+        try (Connection con = DriverManager.getConnection(url, userid, passwd);
+             PreparedStatement pstmt = con.prepareStatement(UPDATE)) {
 
-	@Override
-	public void update(MemberVO memberVO) {
-		Connection con = null;
-		PreparedStatement pstmt = null;
+            pstmt.setString(1, memberVO.getRealName());
+            pstmt.setString(2, memberVO.getPhone());
+            pstmt.setString(3, memberVO.getEmail());
+            pstmt.setString(4, memberVO.getServiceArea());
+            pstmt.setInt(5, memberVO.getIsActive());
+            pstmt.setInt(6, memberVO.getTechNo()); // 指定要修改哪一位技師
 
-		try {
-			con = DriverManager.getConnection(url, userid, passwd);
-			pstmt = con.prepareStatement(UPDATE);
+            pstmt.executeUpdate();
 
-			pstmt.setString(1, memberVO.getAccount());
-			pstmt.setString(2, memberVO.getName());
-			pstmt.setString(3, memberVO.getAddress());
-			pstmt.setString(4, memberVO.getPhone());
-			pstmt.setInt(5, memberVO.getStatus());
-			pstmt.setInt(6, memberVO.getTechId());
+        } catch (SQLException se) {
+            throw new RuntimeException("資料庫修改報錯: " + se.getMessage());
+        }
+    }
 
-			pstmt.executeUpdate();
+    // 刪除技師資料
+    @Override
+    public void delete(Integer techNo) {
+        try (Connection con = DriverManager.getConnection(url, userid, passwd);
+             PreparedStatement pstmt = con.prepareStatement(DELETE)) {
 
-		} catch (SQLException se) {
-			throw new RuntimeException("A database error occured. " + se.getMessage());
-		} finally {
-			if (pstmt != null) {
-				try { pstmt.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (con != null) {
-				try { con.close(); } catch (Exception e) { e.printStackTrace(System.err); }
-			}
-		}
-	}
+            pstmt.setInt(1, techNo);
+            pstmt.executeUpdate();
 
-	@Override
-	public void delete(Integer techId) {
-		Connection con = null;
-		PreparedStatement pstmt = null;
+        } catch (SQLException se) {
+            throw new RuntimeException("資料庫刪除報錯: " + se.getMessage());
+        }
+    }
 
-		try {
-			con = DriverManager.getConnection(url, userid, passwd);
-			pstmt = con.prepareStatement(DELETE);
+    // 根據編號查詢一位技師
+    @Override
+    public MemberVO findByPrimaryKey(Integer techNo) {
+        MemberVO memberVO = null;
+        try (Connection con = DriverManager.getConnection(url, userid, passwd);
+             PreparedStatement pstmt = con.prepareStatement(GET_ONE_STMT)) {
 
-			pstmt.setInt(1, techId);
+            pstmt.setInt(1, techNo);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // 將查詢結果封裝進 VO 物件
+                    memberVO = new MemberVO();
+                    memberVO.setTechNo(rs.getInt("tech_no"));
+                    memberVO.setMemberNo(rs.getInt("member_no"));
+                    memberVO.setRealName(rs.getString("real_name"));
+                    memberVO.setPhone(rs.getString("phone"));
+                    memberVO.setEmail(rs.getString("email"));
+                    memberVO.setServiceArea(rs.getString("service_area"));
+                    memberVO.setIsActive(rs.getInt("is_active"));
+                    memberVO.setCreateAt(rs.getTimestamp("create_at"));
+                    memberVO.setRatingAmount(rs.getInt("rating_amount"));
+                    memberVO.setRatingStar(rs.getInt("rating_star"));
+                }
+            }
+        } catch (SQLException se) {
+            throw new RuntimeException("資料庫查詢單筆報錯: " + se.getMessage());
+        }
+        return memberVO;
+    }
 
-			pstmt.executeUpdate();
+    // 查詢所有技師列表
+    @Override
+    public List<MemberVO> getAll() {
+        List<MemberVO> list = new ArrayList<>();
+        try (Connection con = DriverManager.getConnection(url, userid, passwd);
+             PreparedStatement pstmt = con.prepareStatement(GET_ALL_STMT);
+             ResultSet rs = pstmt.executeQuery()) {
 
-		} catch (SQLException se) {
-			throw new RuntimeException("A database error occured. " + se.getMessage());
-		} finally {
-			if (pstmt != null) {
-				try { pstmt.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (con != null) {
-				try { con.close(); } catch (Exception e) { e.printStackTrace(System.err); }
-			}
-		}
-	}
-
-	@Override
-	public MemberVO findByPrimaryKey(Integer techId) {
-		MemberVO memberVO = null;
-		Connection con = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-
-		try {
-			con = DriverManager.getConnection(url, userid, passwd);
-			pstmt = con.prepareStatement(GET_ONE_STMT);
-
-			pstmt.setInt(1, techId);
-
-			rs = pstmt.executeQuery();
-
-			while (rs.next()) {
-				memberVO = new MemberVO();
-				memberVO.setTechId(rs.getInt("TECH_ID"));
-				memberVO.setAccount(rs.getString("ACCOUNT"));
-				memberVO.setName(rs.getString("NAME"));
-				memberVO.setAddress(rs.getString("ADDRESS"));
-				memberVO.setPhone(rs.getString("PHONE"));
-				memberVO.setStatus(rs.getInt("STATUS"));
-				memberVO.setCreatedAt(rs.getTimestamp("CREATED_AT"));
-			}
-
-		} catch (SQLException se) {
-			throw new RuntimeException("A database error occured. " + se.getMessage());
-		} finally {
-			if (rs != null) {
-				try { rs.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (pstmt != null) {
-				try { pstmt.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (con != null) {
-				try { con.close(); } catch (Exception e) { e.printStackTrace(System.err); }
-			}
-		}
-		return memberVO;
-	}
-
-	@Override
-	public List<MemberVO> getAll() {
-		List<MemberVO> list = new ArrayList<MemberVO>();
-		MemberVO memberVO = null;
-
-		Connection con = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-
-		try {
-			con = DriverManager.getConnection(url, userid, passwd);
-			pstmt = con.prepareStatement(GET_ALL_STMT);
-			rs = pstmt.executeQuery();
-
-			while (rs.next()) {
-				memberVO = new MemberVO();
-				memberVO.setTechId(rs.getInt("TECH_ID"));
-				memberVO.setAccount(rs.getString("ACCOUNT"));
-				memberVO.setName(rs.getString("NAME"));
-				memberVO.setAddress(rs.getString("ADDRESS"));
-				memberVO.setPhone(rs.getString("PHONE"));
-				memberVO.setStatus(rs.getInt("STATUS"));
-				memberVO.setCreatedAt(rs.getTimestamp("CREATED_AT"));
-				list.add(memberVO);
-			}
-
-		} catch (SQLException se) {
-			throw new RuntimeException("A database error occured. " + se.getMessage());
-		} finally {
-			if (rs != null) {
-				try { rs.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (pstmt != null) {
-				try { pstmt.close(); } catch (SQLException se) { se.printStackTrace(System.err); }
-			}
-			if (con != null) {
-				try { con.close(); } catch (Exception e) { e.printStackTrace(System.err); }
-			}
-		}
-		return list;
-	}
+            while (rs.next()) {
+                // 每跑一圈代表一筆資料，存入 List
+                MemberVO memberVO = new MemberVO();
+                memberVO.setTechNo(rs.getInt("tech_no"));
+                memberVO.setMemberNo(rs.getInt("member_no"));
+                memberVO.setRealName(rs.getString("real_name"));
+                memberVO.setPhone(rs.getString("phone"));
+                memberVO.setEmail(rs.getString("email"));
+                memberVO.setServiceArea(rs.getString("service_area"));
+                memberVO.setIsActive(rs.getInt("is_active"));
+                memberVO.setCreateAt(rs.getTimestamp("create_at"));
+                memberVO.setRatingAmount(rs.getInt("rating_amount"));
+                memberVO.setRatingStar(rs.getInt("rating_star"));
+                list.add(memberVO);
+            }
+        } catch (SQLException se) {
+            throw new RuntimeException("資料庫查詢全體報錯: " + se.getMessage());
+        }
+        return list;
+    }
 }

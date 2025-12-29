@@ -1,0 +1,54 @@
+-- 1. 建立資料庫 (若不存在)
+CREATE DATABASE IF NOT EXISTS cja103g1 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE cja103g1;
+
+-- 2. 刪除舊表 (注意順序：先刪除有外鍵的 technician)
+DROP TABLE IF EXISTS technician;
+DROP TABLE IF EXISTS member;
+
+-- 3. 建立 member (一般會員表)
+CREATE TABLE member (
+    member_no INT NOT NULL AUTO_INCREMENT COMMENT '會員編號',
+    username VARCHAR(50) NOT NULL COMMENT '帳號',
+    email VARCHAR(100) NOT NULL COMMENT 'email',
+    password VARCHAR(50) NOT NULL COMMENT '密碼',
+    create_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+    PRIMARY KEY (member_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. 建立 technician (技師表)
+CREATE TABLE technician (
+    tech_no       INT             NOT NULL AUTO_INCREMENT COMMENT '技師編號',
+    member_no     INT             NOT NULL COMMENT '會員編號',
+    real_name     VARCHAR(50)     NOT NULL COMMENT '技師姓名',
+    phone         VARCHAR(20)     NOT NULL COMMENT '連絡電話',
+    email         VARCHAR(100)    NOT NULL COMMENT 'email',
+    service_area  VARCHAR(255)    NULL COMMENT '可服務地區',
+    is_active     TINYINT         NOT NULL COMMENT '技師是否啟用 0:未啟用 1:啟用',
+    create_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+    updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
+    rating_amount INT             NOT NULL DEFAULT 0 COMMENT '評價總人數',
+    rating_star   INT             NOT NULL DEFAULT 0 COMMENT '評價總星數',
+    PRIMARY KEY (tech_no),
+    KEY idx_member_no (member_no),
+    CONSTRAINT fk_technician_member
+        FOREIGN KEY (member_no) REFERENCES member(member_no)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. 插入 member 假資料
+INSERT INTO member (username, email, password) VALUES
+('alice', 'alice@example.com', 'pass123'),
+('bob', 'bob@example.com', 'pass123'),
+('carol', 'carol@example.com', 'pass123'),
+('david', 'david@example.com', 'pass123'),
+('eve', 'eve@example.com', 'pass123');
+
+-- 6. 插入 technician 假資料 (對應上述 member_no 1~5)
+INSERT INTO technician (member_no, real_name, phone, email, service_area, is_active, rating_amount, rating_star) VALUES
+(1, 'Alice Chen', '0912345678', 'alice.tech@example.com', '台北、新北', 1, 10, 45),
+(2, 'Bob Wang', '0922333444', 'bob.tech@example.com', '台中', 1, 5, 22),
+(3, 'Carol Lin', '0933555666', 'carol.tech@example.com', '高雄', 0, 0, 0),
+(4, 'David Lee', '0944777888', 'david.tech@example.com', '台南', 1, 3, 12),
+(5, 'Eve Chang', '0955999000', 'eve.tech@example.com', '新竹、苗栗',  1, 3, 12);

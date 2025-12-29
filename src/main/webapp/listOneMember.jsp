@@ -1,78 +1,35 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.model.*"%>
-<%-- 此頁練習採用 Script 的寫法取值 --%>
-
-<%
-  // 接收來自 MemberServlet.java 存入 req 的 memberVO 物件 [cite: 21]
-  MemberVO memberVO = (MemberVO) request.getAttribute("memberVO");
-%>
-
+<% MemberVO memberVO = (MemberVO) request.getAttribute("memberVO"); %>
 <html>
 <head>
-<title>技師資料 - listOneMember.jsp</title>
-
+<title>技師名片 - Carshop</title>
 <style>
-  table#table-1 {
-    background-color: #CCCCFF;
-    border: 2px solid black;
-    text-align: center;
-    width: 600px;
-  }
-  table#table-1 h4 {
-    color: red;
-    display: block;
-    margin-bottom: 1px;
-  }
-  h4 {
-    color: blue;
-    display: inline;
-  }
-  table {
-    width: 800px;
-    background-color: white;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  table, th, td {
-    border: 1px solid #CCCCFF;
-  }
-  th, td {
-    padding: 5px;
-    text-align: center;
-  }
+    body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding-top: 50px; }
+    .profile-card { background: white; width: 400px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .banner { height: 100px; background: linear-gradient(135deg, #2c3e50, #f39c12); }
+    .content { padding: 20px; text-align: center; }
+    .avatar { width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: -50px auto 10px; border: 5px solid white; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+    .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; text-align: left; }
+    .label { color: #7f8c8d; font-size: 14px; }
+    .back-btn { display: inline-block; margin-top: 20px; color: #3498db; text-decoration: none; }
 </style>
-
 </head>
-<body bgcolor='white'>
-
-<h4>此頁練習採用 Script 的寫法取值:</h4>
-<table id="table-1">
-	<tr><td>
-		 <h3>技師資料 - listOneMember.jsp</h3>
-		 <h4><a href="<%=request.getContextPath() %>/select_page.jsp">回首頁</a></h4>
-	</td></tr>
-</table>
-
-<table>
-	<tr>
-		<th>技師編號</th>
-		<th>帳號</th>
-		<th>姓名</th>
-		<th>服務地址</th>
-		<th>電話</th>
-		<th>狀態</th>
-		<th>帳戶創建時間</th>
-	</tr>
-	<tr>
-		<td><%=memberVO.getTechId()%></td>
-		<td><%=memberVO.getAccount()%></td>
-		<td><%=memberVO.getName()%></td>
-		<td><%=memberVO.getAddress()%></td>
-		<td><%=memberVO.getPhone()%></td>
-		<td><%=(memberVO.getStatus() == 0) ? "正常" : "停權"%></td>
-		<td><%=memberVO.getCreatedAt()%></td>
-	</tr>
-</table>
-
+<body>
+<div class="profile-card">
+    <div class="banner"></div>
+    <div class="content">
+        <div class="avatar">👨‍🔧</div>
+        <h2 style="margin:5px 0;">${memberVO.realName}</h2>
+        <p style="color:#7f8c8d; font-size:12px;">技術人員 ID: ${memberVO.techNo}</p>
+        
+        <div class="info-row"><span class="label">連絡電話</span><span>${memberVO.phone}</span></div>
+        <div class="info-row"><span class="label">電子郵件</span><span>${memberVO.email}</span></div>
+        <div class="info-row"><span class="label">服務區域</span><span>${memberVO.serviceArea}</span></div>
+        <div class="info-row"><span class="label">目前狀態</span><span>${memberVO.isActive == 1 ? "✅ 啟用" : "❌ 停用"}</span></div>
+        
+        <a href="select_page.jsp" class="back-btn">← 返回後台首頁</a>
+    </div>
+</div>
 </body>
 </html>
